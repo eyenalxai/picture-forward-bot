@@ -36,7 +36,7 @@ async def save_photo(message: types.Message) -> Optional[Message]:
         return None
 
     # Check that replied message is a photo
-    if not message.reply_to_message.photo:
+    if not message.reply_to_message or not message.reply_to_message.photo:
         return None
 
     # Get the largest photo
