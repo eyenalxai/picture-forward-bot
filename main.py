@@ -40,8 +40,9 @@ async def save_photo(message: types.Message) -> Optional[Message]:
 
 
 async def on_startup(_):
+    logging.info('Starting up..')
     await bot.set_webhook(WEBHOOK_URL)
-    logging.info(dp)
+    logging.info('Webhook set!')
 
 
 async def on_shutdown(_):
