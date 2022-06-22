@@ -23,7 +23,7 @@ dp = Dispatcher(bot)
 @dp.message_handler(commands=["start", "help"])
 async def hello(message: types.Message):
     await message.reply(
-        "Hello!\n\n If you're an admin, reply with a /save command to forward picture to the meme channel."
+        "Hello!\n\nIf you're an admin, reply with a /save command to forward picture to the meme channel."
     )
 
 
