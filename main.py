@@ -5,7 +5,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.types import ChatMember, Message
 from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, CHANNEL_ID, WEBHOOK_URL, WEBHOOK_URL_PATH, HOST, PORT
+from config import API_TOKEN, CHANNEL_ID, WEBHOOK_URL, WEBHOOK_URL_PATH, HOST, PORT, SOURCE_URL
 from util import find_largest_photo
 
 # Configure logging
@@ -23,7 +23,9 @@ dp = Dispatcher(bot)
 @dp.message_handler(commands=["start", "help"])
 async def hello(message: types.Message):
     await message.reply(
-        "Hello!\n\nIf you're an admin, reply with a /save command to forward picture to the meme channel."
+        f"Hello!\n"
+        f"If you're an admin, reply with a /save command to forward picture to a meme channel.\n\n"
+        f"Source: {SOURCE_URL}"
     )
 
 

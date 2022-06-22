@@ -19,3 +19,5 @@ WEBHOOK_HOST = f'https://{PROJECT_NAME}.up.railway.app/'  # Enter here your link
 
 WEBHOOK_URL_PATH = '/webhook/' + API_TOKEN
 WEBHOOK_URL = urljoin(WEBHOOK_HOST, WEBHOOK_URL_PATH)
+
+SOURCE_URL = os.environ.get("SOURCE_URL")
