@@ -21,7 +21,10 @@ COPY ./util.py /code/util.py
 COPY ./config.py /code/config.py
 
 ENV API_TOKEN ${API_TOKEN}
-ENV API_TOKEN ${API_TOKEN}
 ENV CHANNEL_ID ${CHANNEL_ID}
+ENV PORT ${PORT}
+ENV PROJECT_NAME ${PROJECT_NAME}
+
+EXPOSE 3000
 
 ENTRYPOINT ["poetry", "run", "python", "main.py"]
