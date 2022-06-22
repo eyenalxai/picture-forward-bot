@@ -20,12 +20,19 @@ bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)
 
 
-@dp.message_handler(commands=['save'])
+@dp.message_handler(commands=["start", "help"])
+async def hello(message: types.Message):
+    await message.reply(
+        "Hello!\n\n If you're an admin, reply with a /save command to forward picture to the meme channel."
+    )
+
+
+@dp.message_handler(commands=["save"])
 async def save_photo(message: types.Message) -> Optional[Message]:
     user: ChatMember = await bot.get_chat_member(message.chat.id, message.from_user.id)
 
     # Check that user is admin
-    if user.status != 'creator' and user.status != 'administrator':
+    if user.status != "creator" and user.status != "administrator":
         return None
 
     # Check that replied message is a photo
@@ -40,21 +47,21 @@ async def save_photo(message: types.Message) -> Optional[Message]:
 
 
 async def on_startup(_):
-    logging.info('Starting up..')
+    logging.info("Starting up..")
     await bot.set_webhook(WEBHOOK_URL)
-    logging.info('Webhook set!')
+    logging.info("Webhook set!")
 
 
 async def on_shutdown(_):
-    logging.warning('Shutting down..')
+    logging.warning("Shutting down..")
 
     # Remove webhook (not acceptable in some cases)
     await bot.delete_webhook()
 
-    logging.warning('Bye!')
+    logging.warning("Bye!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     start_webhook(
         dispatcher=dp,
         webhook_path=WEBHOOK_URL_PATH,
