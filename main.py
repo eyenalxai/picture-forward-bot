@@ -55,6 +55,10 @@ async def save_photo(message: types.Message) -> Optional[Message]:
         # Send the video to the specified channel id
         return await bot.send_video(CHANNEL_ID, message.reply_to_message.video.file_id)
 
+    if message.reply_to_message.document:
+        # Send the document to the specified channel id
+        return await bot.send_document(CHANNEL_ID, message.reply_to_message.document.file_id)
+
     return None
 
 
