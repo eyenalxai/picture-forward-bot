@@ -23,5 +23,6 @@ COPY ./config.py /code/config.py
 ENV API_TOKEN ${API_TOKEN}
 ENV CHANNEL_ID ${CHANNEL_ID}
 ENV SOURCE_URL ${SOURCE_URL}
+ENV ENVIRONMENT ${ENVIRONMENT}
 
 ENTRYPOINT ["poetry", "run", "python", "main.py"]

@@ -8,7 +8,7 @@ from aiogram.types import Message
 from aiogram.utils import executor
 from aiogram.utils.exceptions import BotBlocked, BadRequest
 
-from config import API_TOKEN, CHANNEL_ID, SOURCE_URL, CHAT_ID
+from config import API_TOKEN, CHANNEL_ID, SOURCE_URL, CHAT_ID, ENVIRONMENT
 from util import find_largest_photo
 
 # Configure logging
@@ -44,19 +44,25 @@ async def hello(message: types.Message):
 @dp.message_handler(commands=["save"], is_reply=True, is_chat_admin=True, chat_id=CHAT_ID)
 async def save_photo(message: types.Message) -> Optional[Message]:
     # Check that replied message is a photo
-    if not message.reply_to_message.photo:
-        return None
+    if message.reply_to_message.photo:
+        # Get the largest photo
+        largest_photo = find_largest_photo(message.reply_to_message.photo)
 
-    # Get the largest photo
-    largest_photo = find_largest_photo(message.reply_to_message.photo)
+        # Send the largest photo to the specified channel id
+        return await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
 
-    # Send the largest photo to the specified channel id
-    return await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
+    if message.reply_to_message.video:
+        # Send the video to the specified channel id
+        return await bot.send_video(CHANNEL_ID, message.reply_to_message.video.file_id)
+
+    return None
 
 
 if __name__ == '__main__':
-    logging.info("Sleeping for 30 seconds...")
-    sleep(30)
+    if ENVIRONMENT == "PROD":
+        logging.info("Running in PROD environment")
+        logging.info("Sleeping for 30 seconds...")
+        sleep(30)
 
     logging.info("Starting up..")
     executor.start_polling(dp, skip_updates=True)
