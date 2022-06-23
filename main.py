@@ -42,7 +42,7 @@ async def hello(message: types.Message):
 
 
 @dp.message_handler(commands=["save"], is_reply=True, is_chat_admin=True, chat_id=CHAT_ID)
-async def save_photo(message: types.Message) -> Optional[Message]:
+async def forward_content(message: types.Message) -> Optional[Message]:
     # Check that replied message is a photo
     if message.reply_to_message.photo:
         # Get the largest photo
