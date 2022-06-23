@@ -15,7 +15,7 @@ IDENTIFIER = os.environ.get("IDENTIFIER")
 PORT = os.environ.get("PORT")
 
 HOST = "0.0.0.0"
-WEBHOOK_HOST = f'https://{IDENTIFIER}.up.railway.app/'  # Enter here your link from Heroku project settings
+WEBHOOK_HOST = f'https://{IDENTIFIER}.up.railway.app/'
 
 WEBHOOK_URL_PATH = '/webhook/' + API_TOKEN
 WEBHOOK_URL = urljoin(WEBHOOK_HOST, WEBHOOK_URL_PATH)
