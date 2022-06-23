@@ -71,4 +71,4 @@ if __name__ == '__main__':
         sleep(SLEEPING_TIME)
 
     logging.info("Starting up..")
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=False)
