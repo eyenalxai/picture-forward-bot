@@ -4,10 +4,10 @@ from typing import Optional
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ChatMember, Message
+from aiogram.utils import executor
 from aiogram.utils.exceptions import BotBlocked, BadRequest
-from aiogram.utils.executor import start_webhook
 
-from config import API_TOKEN, CHANNEL_ID, WEBHOOK_URL, WEBHOOK_URL_PATH, HOST, PORT, SOURCE_URL
+from config import API_TOKEN, CHANNEL_ID, SOURCE_URL
 from util import find_largest_photo
 
 # Configure logging
@@ -59,27 +59,6 @@ async def save_photo(message: types.Message) -> Optional[Message]:
     await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
 
 
-async def on_startup(_):
+if __name__ == '__main__':
     logging.info("Starting up..")
-    await bot.set_webhook(WEBHOOK_URL)
-    logging.info("Webhook set!")
-
-
-async def on_shutdown(_):
-    logging.warning("Shutting down..")
-
-    # Remove webhook (not acceptable in some cases)
-    await bot.delete_webhook()
-
-    logging.warning("Bye!")
-
-
-if __name__ == "__main__":
-    start_webhook(
-        dispatcher=dp,
-        webhook_path=WEBHOOK_URL_PATH,
-        on_startup=on_startup,
-        on_shutdown=on_shutdown,
-        host=HOST,
-        port=PORT
-    )
+    executor.start_polling(dp, skip_updates=True)
