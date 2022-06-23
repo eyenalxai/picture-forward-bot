@@ -12,6 +12,9 @@ CHAT_ID = os.environ.get("CHAT_ID")
 # Get SOURCE_URL to forward messages to from environment variable
 SOURCE_URL = os.environ.get("SOURCE_URL")
 
+# Get DESCRIPTION from environment variable
+DESCRIPTION = os.environ.get("DESCRIPTION")
+
 # Either DEV or PROD environment
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
