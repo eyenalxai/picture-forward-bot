@@ -92,13 +92,6 @@ async def forward_content(message: types.Message) -> Optional[Message]:
 
 
 if __name__ == '__main__':
-    if ENVIRONMENT == "PROD":
-        logging.info("Running in PROD environment")
-        logging.info(f"Sleeping for {SLEEPING_TIME} seconds...")
-
-        # Waiting for previous instance to stop
-        sleep(SLEEPING_TIME)
-
     logging.info("Starting up...")
 
     # Create the database
@@ -111,5 +104,12 @@ if __name__ == '__main__':
 
     logging.info("Creating database...")
     metadata.create_all(engine)
+
+    if ENVIRONMENT == "PROD":
+        logging.info("Running in PROD environment")
+        logging.info(f"Sleeping for {SLEEPING_TIME} seconds...")
+
+        # Waiting for previous instance to stop
+        sleep(SLEEPING_TIME)
 
     executor.start_polling(dp, skip_updates=False)
