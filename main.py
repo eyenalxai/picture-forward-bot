@@ -1,5 +1,6 @@
 import logging
 import traceback
+from time import sleep
 from typing import Optional
 
 from aiogram import Bot, Dispatcher, types
@@ -54,5 +55,8 @@ async def save_photo(message: types.Message) -> Optional[Message]:
 
 
 if __name__ == '__main__':
+    logging.info("Sleeping for 30 seconds...")
+    sleep(30)
+
     logging.info("Starting up..")
     executor.start_polling(dp, skip_updates=True)
