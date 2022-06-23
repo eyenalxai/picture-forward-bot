@@ -9,7 +9,7 @@ from aiogram.types import Message
 from aiogram.utils import executor
 from aiogram.utils.exceptions import BotBlocked, BadRequest
 
-from config.app import API_TOKEN, CHANNEL_ID, CHAT_ID, ENVIRONMENT, SLEEPING_TIME, SOURCE_URL, DESCRIPTION
+from config.app import API_TOKEN, CHANNEL_ID, CHAT_ID, ENVIRONMENT, SLEEPING_TIME, DESCRIPTION
 from config.database import metadata, DATABASE_URL
 from util import find_largest_photo, is_already_saved, save_file_id, is_allowed_user
 
@@ -29,8 +29,7 @@ dp = Dispatcher(bot)
 async def hello(message: types.Message):
     try:
         await message.reply(
-            f"{DESCRIPTION}.\n\n"
-            f"Исходный код: {SOURCE_URL}",
+            f"{DESCRIPTION}",
             parse_mode="Markdown"
         )
     except BotBlocked:
