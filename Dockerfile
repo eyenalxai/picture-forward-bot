@@ -30,4 +30,6 @@ ARG EXPOSE_PORT=${PORT}
 
 EXPOSE ${EXPOSE_PORT}
 
+RUN echo ${EXPOSE_PORT}
+
 ENTRYPOINT ["poetry", "run", "python", "main.py"]
