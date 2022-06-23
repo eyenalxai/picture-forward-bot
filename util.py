@@ -1,11 +1,11 @@
 from aiogram.types import PhotoSize, Message, ChatMemberOwner, ChatMemberAdministrator
-# Find the largest photo in a list of photos by file size with max() function
 from aiogram.types.base import Integer
 
 from config.app import MAX_OBJECTS
 from model.saved import Saved
 
 
+# Find the largest photo in a list of photos by file size with max() function
 def find_largest_photo(photos: list[PhotoSize]) -> PhotoSize:
     return max(photos, key=lambda x: x.file_size)
 
@@ -19,6 +19,7 @@ async def is_already_saved(file_id: str) -> bool:
 # Save file id to database, if object count is larger than 1000, delete the oldest object
 async def save_file_id(file_id: str) -> None:
     await Saved(file_id=file_id).save()
+
     if await Saved.objects.count() > MAX_OBJECTS:
         oldest_object = await Saved.objects.order_by('id').first()
         await oldest_object.delete()
