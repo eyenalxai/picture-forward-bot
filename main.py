@@ -23,11 +23,15 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=["start", "help"])
 async def hello(message: types.Message):
-    await message.reply(
-        f"Hello!\n"
-        f"If you're an admin, reply with a /save command to forward picture to a meme channel.\n\n"
-        f"Source: {SOURCE_URL}"
-    )
+    try:
+        await message.reply(
+            f"Hello!\n"
+            f"If you're an admin, reply with a /save command to forward picture to a meme channel.\n\n"
+            f"Source: {SOURCE_URL}"
+        )
+    except BotBlocked:
+        logging.error("Bot is blocked by user")
+        return None
 
 
 @dp.message_handler(commands=["save"])
@@ -45,12 +49,8 @@ async def save_photo(message: types.Message) -> Optional[Message]:
     # Get the largest photo
     largest_photo = find_largest_photo(message.reply_to_message.photo)
 
-    try:
-        # Send the largest photo to the specified channel id
-        await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
-    except BotBlocked:
-        logging.error("Bot is blocked by user")
-        return None
+    # Send the largest photo to the specified channel id
+    await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
 
 
 async def on_startup(_):
