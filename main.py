@@ -5,7 +5,7 @@ from typing import Optional
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ChatMember, Message
 from aiogram.utils import executor
-from aiogram.utils.exceptions import BotBlocked, BadRequest
+from aiogram.utils.exceptions import BotBlocked, BadRequest, TerminatedByOtherGetUpdates
 
 from config import API_TOKEN, CHANNEL_ID, SOURCE_URL
 from util import find_largest_photo
@@ -33,8 +33,8 @@ async def hello(message: types.Message):
     except BotBlocked:
         logging.error("Bot is blocked by user")
         return None
-    except BadRequest as e:
-        if e.text == "Replied message not found":
+    except BadRequest as bad_req_exception:
+        if bad_req_exception.text == "Replied message not found":
             logging.error("Message not found")
             return None
         logging.error(traceback.format_exc())
@@ -61,4 +61,7 @@ async def save_photo(message: types.Message) -> Optional[Message]:
 
 if __name__ == '__main__':
     logging.info("Starting up..")
-    executor.start_polling(dp, skip_updates=True)
+    try:
+        executor.start_polling(dp, skip_updates=True)
+    except TerminatedByOtherGetUpdates:
+        logging.error("More than one bot instance is running at the moment.")
