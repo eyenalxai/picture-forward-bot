@@ -8,7 +8,7 @@ from aiogram.types import Message
 from aiogram.utils import executor
 from aiogram.utils.exceptions import BotBlocked, BadRequest
 
-from config import API_TOKEN, CHANNEL_ID, SOURCE_URL, CHAT_ID, ENVIRONMENT
+from config import API_TOKEN, CHANNEL_ID, SOURCE_URL, CHAT_ID, ENVIRONMENT, SLEEPING_TIME
 from util import find_largest_photo
 
 # Configure logging
@@ -65,8 +65,10 @@ async def save_photo(message: types.Message) -> Optional[Message]:
 if __name__ == '__main__':
     if ENVIRONMENT == "PROD":
         logging.info("Running in PROD environment")
-        logging.info("Sleeping for 30 seconds...")
-        sleep(30)
+        logging.info(f"Sleeping for {SLEEPING_TIME} seconds...")
+
+        # Waiting for previous instance to stop
+        sleep(SLEEPING_TIME)
 
     logging.info("Starting up..")
     executor.start_polling(dp, skip_updates=True)

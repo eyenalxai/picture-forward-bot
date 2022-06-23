@@ -14,3 +14,6 @@ SOURCE_URL = os.environ.get("SOURCE_URL")
 
 # Either DEV or PROD environment
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
+
+# In seconds
+SLEEPING_TIME = 60
