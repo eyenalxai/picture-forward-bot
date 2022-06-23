@@ -7,6 +7,7 @@ authors = ["Yest Izit <hi@dmitry.email>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 aiogram = "^2.21"
+ormar = { extras = ["sqlite"], version = "^0.11.1" }
 
 [tool.poetry.dev-dependencies]
 

@@ -17,3 +17,6 @@ ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
 # In seconds
 SLEEPING_TIME = 60
+
+# Total number of objects to be kept in database
+MAX_OBJECTS = 1000
