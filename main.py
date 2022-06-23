@@ -1,9 +1,10 @@
 import logging
+import traceback
 from typing import Optional
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ChatMember, Message
-from aiogram.utils.exceptions import BotBlocked
+from aiogram.utils.exceptions import BotBlocked, BadRequest
 from aiogram.utils.executor import start_webhook
 
 from config import API_TOKEN, CHANNEL_ID, WEBHOOK_URL, WEBHOOK_URL_PATH, HOST, PORT, SOURCE_URL
@@ -32,6 +33,9 @@ async def hello(message: types.Message):
     except BotBlocked:
         logging.error("Bot is blocked by user")
         return None
+    except BadRequest:
+        # log exception traceback with error log level
+        logging.error(traceback.format_exc())
 
 
 @dp.message_handler(commands=["save"])
