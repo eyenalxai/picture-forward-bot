@@ -5,14 +5,13 @@ from typing import Optional
 
 import sqlalchemy
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message, ChatMemberOwner, ChatMemberAdministrator
-from aiogram.types.base import Integer
+from aiogram.types import Message
 from aiogram.utils import executor
 from aiogram.utils.exceptions import BotBlocked, BadRequest
 
 from config.app import API_TOKEN, CHANNEL_ID, SOURCE_URL, CHAT_ID, ENVIRONMENT, SLEEPING_TIME
 from config.database import metadata, DATABASE_URL
-from util import find_largest_photo, is_already_saved, save_file_id
+from util import find_largest_photo, is_already_saved, save_file_id, is_allowed_user
 
 # Configure logging
 logging.basicConfig(
@@ -46,19 +45,11 @@ async def hello(message: types.Message):
 
 @dp.message_handler(commands=["save"], is_reply=True, chat_id=CHAT_ID)
 async def forward_content(message: types.Message) -> Optional[Message]:
-    # Get user id from message
-    user_id: Integer = message.from_user.id
-
-    # Get all administrators and creator of current chat from message
-    admins: list[ChatMemberOwner | ChatMemberAdministrator] = await message.chat.get_administrators()
-
-    # If user is not an admin or creator of current chat, or is not replying to his own message, return None
-    if user_id not in [admin.user.id for admin in admins] and message.reply_to_message.from_user.id != user_id:
+    if not await is_allowed_user(message):
         return None
 
     # Check that replied message is a photo
     if message.reply_to_message.photo:
-
         # Get the largest photo
         largest_photo = find_largest_photo(message.reply_to_message.photo)
 
@@ -74,7 +65,6 @@ async def forward_content(message: types.Message) -> Optional[Message]:
         return await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
 
     if message.reply_to_message.video:
-
         # Check that video is not already saved in database, if it is, return None
         if await is_already_saved(message.reply_to_message.video.file_id):
             logging.info(f"Video {message.reply_to_message.video.file_id} is already saved")
