@@ -3,6 +3,7 @@ from typing import Optional
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import ChatMember, Message
+from aiogram.utils.exceptions import BotBlocked
 from aiogram.utils.executor import start_webhook
 
 from config import API_TOKEN, CHANNEL_ID, WEBHOOK_URL, WEBHOOK_URL_PATH, HOST, PORT, SOURCE_URL
@@ -44,8 +45,12 @@ async def save_photo(message: types.Message) -> Optional[Message]:
     # Get the largest photo
     largest_photo = find_largest_photo(message.reply_to_message.photo)
 
-    # Send the largest photo to the specified channel id
-    await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
+    try:
+        # Send the largest photo to the specified channel id
+        await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
+    except BotBlocked:
+        logging.error("Bot is blocked by user")
+        return None
 
 
 async def on_startup(_):
