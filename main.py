@@ -4,11 +4,12 @@ from time import sleep
 from typing import Optional
 
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message
+from aiogram.types import Message, ChatMemberOwner, ChatMemberAdministrator
+from aiogram.types.base import Integer
 from aiogram.utils import executor
 from aiogram.utils.exceptions import BotBlocked, BadRequest
 
-from config import API_TOKEN, CHANNEL_ID, SOURCE_URL, CHAT_ID, ENVIRONMENT, SLEEPING_TIME
+from config.app import API_TOKEN, CHANNEL_ID, SOURCE_URL, CHAT_ID, ENVIRONMENT, SLEEPING_TIME
 from util import find_largest_photo
 
 # Configure logging
@@ -43,9 +44,14 @@ async def hello(message: types.Message):
 
 @dp.message_handler(commands=["save"], is_reply=True, chat_id=CHAT_ID)
 async def forward_content(message: types.Message) -> Optional[Message]:
-    # Check that user is an admin in the group or that user replies to his own message
-    if message.from_user.id not in await message.chat.get_administrators() \
-            and message.from_user.id != message.reply_to_message.from_user.id:
+    # Get user id from message
+    user_id: Integer = message.from_user.id
+
+    # Get all administrators and creator of current chat from message
+    admins: list[ChatMemberOwner | ChatMemberAdministrator] = await message.chat.get_administrators()
+
+    # If user is not an admin or creator of current chat, or is not replying to his own message, return None
+    if user_id not in [admin.user.id for admin in admins] and message.reply_to_message.from_user.id != user_id:
         return None
 
     # Check that replied message is a photo

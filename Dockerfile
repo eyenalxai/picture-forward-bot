@@ -18,7 +18,7 @@ RUN poetry install
 
 COPY ./main.py /code/main.py
 COPY ./util.py /code/util.py
-COPY ./config.py /code/config.py
+COPY config/app.py /code/config.py
 
 ENV API_TOKEN ${API_TOKEN}
 ENV CHANNEL_ID ${CHANNEL_ID}
