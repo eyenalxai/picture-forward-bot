@@ -41,8 +41,13 @@ async def hello(message: types.Message):
         logging.error(traceback.format_exc())
 
 
-@dp.message_handler(commands=["save"], is_reply=True, is_chat_admin=True, chat_id=CHAT_ID)
+@dp.message_handler(commands=["save"], is_reply=True, chat_id=CHAT_ID)
 async def forward_content(message: types.Message) -> Optional[Message]:
+    # Check that user is an admin in the group or that user replies to his own message
+    if message.from_user.id not in await message.chat.get_administrators() \
+            and message.from_user.id != message.reply_to_message.from_user.id:
+        return None
+
     # Check that replied message is a photo
     if message.reply_to_message.photo:
         # Get the largest photo
