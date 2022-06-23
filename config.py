@@ -8,8 +8,8 @@ API_TOKEN = os.environ.get("API_TOKEN")
 # Get CHANNEL_ID to forward messages to from environment variable
 CHANNEL_ID = os.environ.get("CHANNEL_ID")
 
-# Get PROJECT_NAME from environment variable
-IDENTIFIER = os.environ.get("PROJECT_NAME")
+# Get IDENTIFIER from environment variable
+IDENTIFIER = os.environ.get("IDENTIFIER")
 
 # Get PORT from environment variable
 PORT = os.environ.get("PORT")
