@@ -16,9 +16,10 @@ COPY ./pyproject.toml /code/pyproject.toml
 
 RUN poetry install
 
+COPY ./config /code/config
+COPY ./model /code/model
 COPY ./main.py /code/main.py
 COPY ./util.py /code/util.py
-COPY ./config /code/config
 
 ENV API_TOKEN ${API_TOKEN}
 ENV CHANNEL_ID ${CHANNEL_ID}
