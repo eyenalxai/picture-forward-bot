@@ -3,11 +3,11 @@ import traceback
 from typing import Optional
 
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import ChatMember, Message
+from aiogram.types import Message
 from aiogram.utils import executor
-from aiogram.utils.exceptions import BotBlocked, BadRequest, TerminatedByOtherGetUpdates
+from aiogram.utils.exceptions import BotBlocked, BadRequest
 
-from config import API_TOKEN, CHANNEL_ID, SOURCE_URL
+from config import API_TOKEN, CHANNEL_ID, SOURCE_URL, CHAT_ID
 from util import find_largest_photo
 
 # Configure logging
@@ -40,28 +40,19 @@ async def hello(message: types.Message):
         logging.error(traceback.format_exc())
 
 
-@dp.message_handler(commands=["save"])
+@dp.message_handler(commands=["save"], is_reply=True, is_chat_admin=True, chat_id=CHAT_ID)
 async def save_photo(message: types.Message) -> Optional[Message]:
-    user: ChatMember = await bot.get_chat_member(message.chat.id, message.from_user.id)
-
-    # Check that user is admin
-    if user.status != "creator" and user.status != "administrator":
-        return None
-
     # Check that replied message is a photo
-    if not message.reply_to_message or not message.reply_to_message.photo:
+    if not message.reply_to_message.photo:
         return None
 
     # Get the largest photo
     largest_photo = find_largest_photo(message.reply_to_message.photo)
 
     # Send the largest photo to the specified channel id
-    await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
+    return await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
 
 
 if __name__ == '__main__':
     logging.info("Starting up..")
-    try:
-        executor.start_polling(dp, skip_updates=True)
-    except TerminatedByOtherGetUpdates:
-        logging.error("More than one bot instance is running at the moment.")
+    executor.start_polling(dp, skip_updates=True)
