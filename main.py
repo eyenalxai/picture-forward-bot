@@ -33,8 +33,10 @@ async def hello(message: types.Message):
     except BotBlocked:
         logging.error("Bot is blocked by user")
         return None
-    except BadRequest:
-        # log exception traceback with error log level
+    except BadRequest as e:
+        if e.text == "Replied message not found":
+            logging.error("Message not found")
+            return None
         logging.error(traceback.format_exc())
 
 
