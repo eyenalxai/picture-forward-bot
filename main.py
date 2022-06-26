@@ -6,10 +6,11 @@ from typing import Optional
 import sqlalchemy
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import Message
-from aiogram.utils import executor
 from aiogram.utils.exceptions import BotBlocked, BadRequest
+from aiogram.utils.executor import start_webhook
 
-from config.app import API_TOKEN, CHANNEL_ID, CHAT_ID, ENVIRONMENT, SLEEPING_TIME, DESCRIPTION
+from config.app import API_TOKEN, CHANNEL_ID, CHAT_ID, ENVIRONMENT, SLEEPING_TIME, DESCRIPTION, WEBHOOK_PATH, \
+    WEBHOOK_URL, PORT
 from config.database import metadata, DATABASE_URL
 from util import find_largest_photo, is_already_saved, save_file_id, is_allowed_user
 
@@ -90,7 +91,7 @@ async def forward_content(message: types.Message) -> Optional[Message]:
     return None
 
 
-if __name__ == '__main__':
+async def on_startup(dp):
     logging.info("Starting up...")
 
     # Create the database
@@ -104,6 +105,20 @@ if __name__ == '__main__':
     logging.info("Creating database...")
     metadata.create_all(engine)
 
+    await bot.set_webhook(WEBHOOK_URL)
+
+
+async def on_shutdown(dp):
+    logging.warning('Shutting down..')
+
+    # Remove webhook (not acceptable in some cases)
+    await bot.delete_webhook()
+
+    logging.warning('Bye!')
+
+
+if __name__ == '__main__':
+
     if ENVIRONMENT == "PROD":
         logging.info("Running in PROD environment")
         logging.info(f"Sleeping for {SLEEPING_TIME} seconds...")
@@ -111,4 +126,11 @@ if __name__ == '__main__':
         # Waiting for previous instance to stop
         sleep(SLEEPING_TIME)
 
-    executor.start_polling(dp, skip_updates=False)
+    start_webhook(
+        dispatcher=dp,
+        webhook_path=WEBHOOK_PATH,
+        on_startup=on_startup,
+        skip_updates=False,
+        host="0.0.0.0",
+        port=PORT,
+    )

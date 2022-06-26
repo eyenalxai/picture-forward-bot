@@ -15,8 +15,18 @@ DESCRIPTION = os.environ.get("DESCRIPTION")
 # Either DEV or PROD environment
 ENVIRONMENT = os.environ.get("ENVIRONMENT")
 
+# Get DOMAIN from environment variable
+DOMAIN = os.environ.get("DOMAIN")
+
+# Get PORT from environment variable
+PORT = os.environ.get("PORT")
+
 # In seconds
-SLEEPING_TIME = 60
+SLEEPING_TIME = 30
 
 # Total number of objects to be kept in database
 MAX_OBJECTS = 1000
+
+# Configure webhook
+WEBHOOK_PATH = f"/webhook/{API_TOKEN}"
+WEBHOOK_URL = f"https://{DOMAIN}{WEBHOOK_PATH}"
