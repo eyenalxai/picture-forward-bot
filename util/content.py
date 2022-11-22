@@ -24,7 +24,7 @@ def get_file(
     raise Exception("No file found")
 
 
-async def handle_content(
+async def save_content_to_channel(
     async_session: AsyncSession,
     bot: Bot,
     channel_name: str,
