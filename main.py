@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngin
 
 from models import Base
 from settings_reader import PollType
-from util.content import handle_content
 from util.log import logger
 from util.middleware import (
     filter_non_reply_to_user,
@@ -30,7 +29,7 @@ async def start(message: Message, description: str) -> None:
 
 
 @content_router.message(Command("save"), MagicFilter.reply_to_message)
-async def handle_video(
+async def handle_save(
     message: Message,
     async_session: AsyncSession,
     reply_to_user: TelegramUser,
@@ -44,7 +43,7 @@ async def handle_video(
     if not await is_allowed_user(message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user):
         return None
 
-    await handle_content(
+    await handle_save(
         async_session=async_session,
         bot=bot,
         video=video,
