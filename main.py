@@ -1,7 +1,9 @@
+from typing import Optional
+
 from aiogram import Dispatcher, Bot, Router, F as MagicFilter
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import SimpleEventIsolation
-from aiogram.types import Message, PhotoSize, User as TelegramUser, Video
+from aiogram.types import Message, PhotoSize, User as TelegramUser, Video, Animation
 from aiogram.webhook.aiohttp_server import setup_application, SimpleRequestHandler
 from aiohttp import web
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
@@ -11,17 +13,15 @@ from settings_reader import PollType
 from util.content import handle_content
 from util.log import logger
 from util.middleware import (
-    filter_non_reply_photo,
     filter_non_reply_to_user,
     get_async_database_session,
-    filter_non_reply_video,
+    filter_non_reply_content,
     filter_chat_id,
 )
 from util.user import is_allowed_user
 
 start_router = Router(name="oof")
-picture_router = Router(name="picture router")
-video_router = Router(name="video router")
+content_router = Router()
 
 
 @start_router.message(Command("start", "help"))
@@ -29,36 +29,17 @@ async def start(message: Message, description: str) -> None:
     await message.reply(f"{description}", parse_mode="Markdown")
 
 
-@picture_router.message(Command("save"), MagicFilter.reply_to_message.photo)
-async def handle_picture(
-    message: Message,
-    async_session: AsyncSession,
-    reply_to_user: TelegramUser,
-    sent_by_user: TelegramUser,
-    bot: Bot,
-    picture: PhotoSize,
-    channel_name: str,
-) -> None:
-    if not await is_allowed_user(message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user):
-        return None
-
-    await handle_content(
-        async_session=async_session,
-        bot=bot,
-        file=picture,
-        channel_name=channel_name,
-    )
-
-
-@video_router.message(Command("save"), MagicFilter.reply_to_message.video)
+@content_router.message(Command("save"), MagicFilter.reply_to_message)
 async def handle_video(
     message: Message,
     async_session: AsyncSession,
     reply_to_user: TelegramUser,
     sent_by_user: TelegramUser,
     bot: Bot,
-    video: Video,
     channel_name: str,
+    video: Optional[Video] = None,
+    picture: Optional[PhotoSize] = None,
+    animation: Optional[Animation] = None,
 ) -> None:
     if not await is_allowed_user(message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user):
         return None
@@ -66,7 +47,9 @@ async def handle_video(
     await handle_content(
         async_session=async_session,
         bot=bot,
-        file=video,
+        video=video,
+        picture=picture,
+        animation=animation,
         channel_name=channel_name,
     )
 
@@ -104,18 +87,13 @@ def main() -> None:
     dispatcher.shutdown.register(on_shutdown)
 
     dispatcher.include_router(start_router)
-    dispatcher.include_router(picture_router)
-    dispatcher.include_router(video_router)
+    dispatcher.include_router(content_router)
 
     dispatcher.message.middleware(filter_chat_id)  # type: ignore
 
-    picture_router.message.middleware(filter_non_reply_to_user)  # type: ignore
-    picture_router.message.middleware(get_async_database_session)  # type: ignore
-    picture_router.message.middleware(filter_non_reply_photo)  # type: ignore
-
-    video_router.message.middleware(filter_non_reply_to_user)  # type: ignore
-    video_router.message.middleware(get_async_database_session)  # type: ignore
-    video_router.message.middleware(filter_non_reply_video)  # type: ignore
+    content_router.message.middleware(filter_non_reply_to_user)  # type: ignore
+    content_router.message.middleware(get_async_database_session)  # type: ignore
+    content_router.message.middleware(filter_non_reply_content)  # type: ignore
 
     dispatcher["async_engine"] = create_async_engine(url="sqlite+aiosqlite:///:memory:")
     dispatcher["channel_name"] = settings.channel_name

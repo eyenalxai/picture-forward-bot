@@ -13,6 +13,7 @@ async def filter_chat_id(
     data: Dict[str, Any],
 ) -> Any:
     if message.chat.id != data["chat_id"]:
+        logger.info(f"Message from {message.chat.id} is not allowed")
         return None
 
     return await handler(message, data)
@@ -47,27 +48,20 @@ async def filter_non_reply_to_user(
     return await handler(message, data)
 
 
-async def filter_non_reply_photo(
+async def filter_non_reply_content(
     handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
     message: Message,
     data: Dict[str, Any],
 ) -> Any:
-    if not message.reply_to_message or not message.reply_to_message.photo:
+    if not message.reply_to_message:
         return None
 
-    largest_photo = get_largest_picture(pictures=message.reply_to_message.photo)
-
-    data["picture"] = largest_photo
-    return await handler(message, data)
-
-
-async def filter_non_reply_video(
-    handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
-    message: Message,
-    data: Dict[str, Any],
-) -> Any:
-    if not message.reply_to_message or not message.reply_to_message.video:
-        return None
-
-    data["video"] = message.reply_to_message.video
-    return await handler(message, data)
+    if message.reply_to_message.video:
+        data["video"] = message.reply_to_message.video
+        return await handler(message, data)
+    if message.reply_to_message.animation:
+        data["animation"] = message.reply_to_message.animation
+        return await handler(message, data)
+    if message.reply_to_message.photo:
+        data["picture"] = get_largest_picture(pictures=message.reply_to_message.photo)
+        return await handler(message, data)
