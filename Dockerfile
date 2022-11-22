@@ -16,17 +16,17 @@ COPY ./pyproject.toml /code/pyproject.toml
 
 RUN poetry install
 
-COPY ./config /code/config
-COPY ./model /code/model
+COPY ./util /code/util
+COPY ./settings_reader.py /code/settings_reader.py
+COPY ./models.py /code/models.py
 COPY ./main.py /code/main.py
-COPY ./util.py /code/util.py
 
 ENV API_TOKEN ${API_TOKEN}
-ENV CHANNEL_ID ${CHANNEL_ID}
-ENV DESCRIPTION ${DESCRIPTION}
-ENV ENVIRONMENT ${ENVIRONMENT}
+ENV CHANNEL_NAME ${CHANNEL_NAME}
 ENV DOMAIN ${DOMAIN}
 ENV PORT ${PORT}
+ENV POLL_TYPE ${POLL_TYPE}
+ENV DESCRIPTION ${DESCRIPTION}
 
 ARG EXPOSE_PORT=${PORT}
 
