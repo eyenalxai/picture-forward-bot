@@ -12,8 +12,6 @@ async def filter_chat_id(
     message: Message,
     data: Dict[str, Any],
 ) -> Any:
-    logger.info(f"Chat id: {message.chat.id}")
-    logger.info(f"Desired chat id: {data['chat_id']}")
     if message.chat.id != data["chat_id"]:
         return None
 
