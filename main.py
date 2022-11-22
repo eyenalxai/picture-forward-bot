@@ -1,136 +1,141 @@
-import logging
-import traceback
-from time import sleep
-from typing import Optional
+from aiogram import Dispatcher, Bot, Router, F as MagicFilter
+from aiogram.filters import Command
+from aiogram.fsm.storage.memory import SimpleEventIsolation
+from aiogram.types import Message, PhotoSize, User as TelegramUser, Video
+from aiogram.webhook.aiohttp_server import setup_application, SimpleRequestHandler
+from aiohttp import web
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 
-import sqlalchemy
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import Message
-from aiogram.utils.exceptions import BotBlocked, BadRequest
-from aiogram.utils.executor import start_webhook
-
-from config.app import API_TOKEN, CHANNEL_ID, CHAT_ID, ENVIRONMENT, SLEEPING_TIME, DESCRIPTION, WEBHOOK_PATH, \
-    WEBHOOK_URL, PORT
-from config.database import metadata, DATABASE_URL
-from util import find_largest_photo, is_already_saved, save_file_id, is_allowed_user
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s]: %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+from util.log import logger
+from models import Base
+from settings_reader import PollType
+from util.content import handle_content
+from util.middleware import (
+    filter_non_reply_photo,
+    filter_non_reply_to_user,
+    get_async_database_session,
+    filter_non_reply_video,
 )
+from util.user import is_allowed_user
 
-# Initialize bot and dispatcher
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
-
-
-@dp.message_handler(commands=["start", "help"])
-async def hello(message: types.Message):
-    try:
-        await message.reply(
-            f"{DESCRIPTION}",
-            parse_mode="Markdown"
-        )
-    except BotBlocked:
-        logging.error("Bot is blocked by user")
-        return None
-    except BadRequest as bad_req_exception:
-        if bad_req_exception.text == "Replied message not found":
-            logging.error("Message not found")
-            return None
-        logging.error(traceback.format_exc())
+start_router = Router(name="oof")
+picture_router = Router(name="picture router")
+video_router = Router(name="video router")
 
 
-@dp.message_handler(commands=["save"], is_reply=True, chat_id=CHAT_ID)
-async def forward_content(message: types.Message) -> Optional[Message]:
-    if not await is_allowed_user(message):
+@start_router.message(Command("start", "help"))
+async def start(message: Message, description: str) -> None:
+    await message.reply(f"{description}", parse_mode="Markdown")
+
+
+@picture_router.message(Command("save"), MagicFilter.reply_to_message.photo)
+async def handle_picture(
+    message: Message,
+    async_session: AsyncSession,
+    reply_to_user: TelegramUser,
+    sent_by_user: TelegramUser,
+    bot: Bot,
+    picture: PhotoSize,
+    channel_name: str,
+) -> None:
+    if not await is_allowed_user(message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user):
         return None
 
-    # Check that replied message is a photo
-    if message.reply_to_message.photo:
-        # Get the largest photo
-        largest_photo = find_largest_photo(message.reply_to_message.photo)
-
-        # Check that photo is not already saved in database, if it is, return None
-        if await is_already_saved(largest_photo.file_id):
-            logging.info(f"Photo {largest_photo.file_id} is already saved")
-            return None
-
-        # Save largest photo file id to database
-        await save_file_id(largest_photo.file_id)
-
-        # Send the largest photo to the specified channel id
-        return await bot.send_photo(CHANNEL_ID, largest_photo.file_id)
-
-    if message.reply_to_message.video:
-        # Check that video is not already saved in database, if it is, return None
-        if await is_already_saved(message.reply_to_message.video.file_id):
-            logging.info(f"Video {message.reply_to_message.video.file_id} is already saved")
-            return None
-
-        # Save video file id to database using ormar
-        await save_file_id(message.reply_to_message.video.file_id)
-
-        # Send the video to the specified channel id
-        return await bot.send_video(CHANNEL_ID, message.reply_to_message.video.file_id)
-
-    if message.reply_to_message.document:
-        # Check that document is not already saved in database, if it is, return None
-        if await is_already_saved(message.reply_to_message.document.file_id):
-            logging.info(f"Document {message.reply_to_message.document.file_id} is already saved")
-            return None
-
-        # Save document file id to database using ormar
-        await save_file_id(message.reply_to_message.document.file_id)
-
-        # Send the document to the specified channel id
-        return await bot.send_document(CHANNEL_ID, message.reply_to_message.document.file_id)
-
-    return None
-
-
-async def on_startup(dp):
-    logging.info("Starting up...")
-
-    # Create the database
-    logging.info("Initializing database...")
-    engine = sqlalchemy.create_engine(DATABASE_URL)
-
-    # Just to be sure we clear the db before
-    logging.info("Dropping existing database...")
-    metadata.drop_all(engine)
-
-    logging.info("Creating database...")
-    metadata.create_all(engine)
-
-    await bot.set_webhook(WEBHOOK_URL)
-
-
-async def on_shutdown(dp):
-    logging.warning('Shutting down..')
-
-    # Remove webhook (not acceptable in some cases)
-    await bot.delete_webhook()
-
-    logging.warning('Bye!')
-
-
-if __name__ == '__main__':
-
-    if ENVIRONMENT == "PROD":
-        logging.info("Running in PROD environment")
-        logging.info(f"Sleeping for {SLEEPING_TIME} seconds...")
-
-        # Waiting for previous instance to stop
-        sleep(SLEEPING_TIME)
-
-    start_webhook(
-        dispatcher=dp,
-        webhook_path=WEBHOOK_PATH,
-        on_startup=on_startup,
-        skip_updates=False,
-        host="0.0.0.0",
-        port=PORT,
+    await handle_content(
+        async_session=async_session,
+        bot=bot,
+        file=picture,
+        channel_name=channel_name,
     )
+
+
+@video_router.message(Command("save"), MagicFilter.reply_to_message.video)
+async def handle_video(
+    message: Message,
+    async_session: AsyncSession,
+    reply_to_user: TelegramUser,
+    sent_by_user: TelegramUser,
+    bot: Bot,
+    video: Video,
+    channel_name: str,
+) -> None:
+    if not await is_allowed_user(message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user):
+        return None
+
+    await handle_content(
+        async_session=async_session,
+        bot=bot,
+        file=video,
+        channel_name=channel_name,
+    )
+
+
+async def on_startup(bot: Bot, dispatcher: Dispatcher) -> None:
+    from settings_reader import settings
+
+    async_engine = dispatcher["async_engine"]
+
+    assert async_engine is not None
+    assert isinstance(async_engine, AsyncEngine)
+
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        logger.info("Dropped all tables")
+        await conn.run_sync(Base.metadata.create_all)
+        logger.info("Created all tables")
+
+    if settings.poll_type == PollType.WEBHOOK:
+        webhook_url = settings.webhook_url
+        await bot.set_webhook(webhook_url)
+        logger.info(f"Webhook set to: {webhook_url}")
+
+
+async def on_shutdown() -> None:
+    logger.info("Shutting down...")
+
+
+def main() -> None:
+    from settings_reader import settings
+
+    dispatcher = Dispatcher(events_isolation=SimpleEventIsolation())
+
+    dispatcher.startup.register(on_startup)
+    dispatcher.shutdown.register(on_shutdown)
+
+    dispatcher.include_router(start_router)
+    dispatcher.include_router(picture_router)
+    dispatcher.include_router(video_router)
+
+    picture_router.message.middleware(filter_non_reply_to_user)  # type: ignore
+    picture_router.message.middleware(get_async_database_session)  # type: ignore
+    picture_router.message.middleware(filter_non_reply_photo)  # type: ignore
+
+    video_router.message.middleware(filter_non_reply_to_user)  # type: ignore
+    video_router.message.middleware(get_async_database_session)  # type: ignore
+    video_router.message.middleware(filter_non_reply_video)  # type: ignore
+
+    dispatcher["async_engine"] = create_async_engine(url="sqlite+aiosqlite:///:memory:")
+    dispatcher["channel_name"] = settings.channel_name
+    dispatcher["description"] = settings.description
+
+    bot = Bot(settings.api_token, parse_mode="HTML")
+
+    if settings.poll_type == PollType.WEBHOOK:
+        from aiohttp_healthcheck import HealthCheck  # type: ignore
+
+        health = HealthCheck()
+
+        app = web.Application()
+        SimpleRequestHandler(dispatcher=dispatcher, bot=bot).register(app, path=settings.main_bot_path)
+        setup_application(app, dispatcher, bot=bot)
+
+        app.add_routes([web.get("/health", health)])
+
+        web.run_app(app, host="0.0.0.0", port=settings.port)
+
+    if settings.poll_type == PollType.POLLING:
+        dispatcher.run_polling(bot, skip_updates=True)
+
+
+if __name__ == "__main__":
+    main()
