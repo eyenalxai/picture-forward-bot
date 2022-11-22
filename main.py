@@ -6,10 +6,10 @@ from aiogram.webhook.aiohttp_server import setup_application, SimpleRequestHandl
 from aiohttp import web
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 
-from util.log import logger
 from models import Base
 from settings_reader import PollType
 from util.content import handle_content
+from util.log import logger
 from util.middleware import (
     filter_non_reply_photo,
     filter_non_reply_to_user,

@@ -1,10 +1,9 @@
-import logging
 from typing import Any, Dict, Awaitable, Callable
 
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from log import logger
+from util.log import logger
 from util.photo import get_largest_picture
 
 
