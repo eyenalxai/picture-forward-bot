@@ -7,6 +7,19 @@ from util.log import logger
 from util.photo import get_largest_picture
 
 
+async def filter_chat_id(
+    handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
+    message: Message,
+    data: Dict[str, Any],
+) -> Any:
+    logger.info(f"Chat id: {message.chat.id}")
+    logger.info(f"Desired chat id: {data['chat_id']}")
+    if message.chat.id != data["chat_id"]:
+        return None
+
+    return await handler(message, data)
+
+
 async def get_async_database_session(
     handler: Callable[[Message, Dict[str, Any]], Awaitable[Any]],
     message: Message,

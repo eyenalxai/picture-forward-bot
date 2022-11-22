@@ -15,6 +15,7 @@ from util.middleware import (
     filter_non_reply_to_user,
     get_async_database_session,
     filter_non_reply_video,
+    filter_chat_id,
 )
 from util.user import is_allowed_user
 
@@ -106,6 +107,8 @@ def main() -> None:
     dispatcher.include_router(picture_router)
     dispatcher.include_router(video_router)
 
+    dispatcher.message.middleware(filter_chat_id)  # type: ignore
+
     picture_router.message.middleware(filter_non_reply_to_user)  # type: ignore
     picture_router.message.middleware(get_async_database_session)  # type: ignore
     picture_router.message.middleware(filter_non_reply_photo)  # type: ignore
@@ -117,6 +120,7 @@ def main() -> None:
     dispatcher["async_engine"] = create_async_engine(url="sqlite+aiosqlite:///:memory:")
     dispatcher["channel_name"] = settings.channel_name
     dispatcher["description"] = settings.description
+    dispatcher["chat_id"] = settings.chat_id
 
     bot = Bot(settings.api_token, parse_mode="HTML")
 

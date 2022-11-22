@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     port: int = Field(env="PORT")
     poll_type: PollType = Field(env="POLL_TYPE")
     description: str = Field(env="DESCRIPTION")
+    chat_id: int = Field(env="CHAT_ID")
     main_bot_path: str = "/webhook/main"
 
     @property
