@@ -44,6 +44,5 @@ jobs:
       - name: Run linters
         uses: wearerequired/lint-action@v2
         with:
-          command_prefix: poetry run
-          black: true
+          pylint_command_prefix: poetry run
           pylint: true
