@@ -22,7 +22,7 @@ class Settings(BaseSettings):
         return f"https://{self.domain}{self.main_bot_path}"
 
     @validator("domain")
-    def domain_must_not_end_with_slash(cls, v: str) -> str:
+    def domain_must_not_end_with_slash(cls, v: str) -> str:  # pylint: disable=no-self-argument, invalid-name
         assert not v.endswith("/"), "DOMAIN must not end with slash"
         assert not v.startswith("http"), "DOMAIN must not start with http or https"
         return v

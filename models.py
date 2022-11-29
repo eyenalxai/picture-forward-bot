@@ -1,5 +1,5 @@
-from sqlalchemy import String, func, TIMESTAMP
-from sqlalchemy.orm import relationship, Mapped, mapped_column, DeclarativeBase
+from sqlalchemy import String
+from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 
 
 class Base(DeclarativeBase):

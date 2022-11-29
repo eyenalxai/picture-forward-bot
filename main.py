@@ -4,12 +4,14 @@ from aiogram.fsm.storage.memory import SimpleEventIsolation
 from aiogram.types import Message, PhotoSize, User as TelegramUser, Video
 from aiogram.webhook.aiohttp_server import setup_application, SimpleRequestHandler
 from aiohttp import web
+from aiohttp_healthcheck import HealthCheck  # type: ignore
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 
-from util.log import logger
 from models import Base
 from settings_reader import PollType
+from settings_reader import settings
 from util.content import handle_content
+from util.log import logger
 from util.middleware import (
     filter_non_reply_photo,
     filter_non_reply_to_user,
@@ -29,7 +31,7 @@ async def start(message: Message, description: str) -> None:
 
 
 @picture_router.message(Command("save"), MagicFilter.reply_to_message.photo)
-async def handle_picture(
+async def handle_picture(  # pylint: disable=too-many-arguments
     message: Message,
     async_session: AsyncSession,
     reply_to_user: TelegramUser,
@@ -50,7 +52,7 @@ async def handle_picture(
 
 
 @video_router.message(Command("save"), MagicFilter.reply_to_message.video)
-async def handle_video(
+async def handle_video(  # pylint: disable=too-many-arguments
     message: Message,
     async_session: AsyncSession,
     reply_to_user: TelegramUser,
@@ -71,8 +73,6 @@ async def handle_video(
 
 
 async def on_startup(bot: Bot, dispatcher: Dispatcher) -> None:
-    from settings_reader import settings
-
     async_engine = dispatcher["async_engine"]
 
     assert async_engine is not None
@@ -95,8 +95,6 @@ async def on_shutdown() -> None:
 
 
 def main() -> None:
-    from settings_reader import settings
-
     dispatcher = Dispatcher(events_isolation=SimpleEventIsolation())
 
     dispatcher.startup.register(on_startup)
@@ -121,8 +119,6 @@ def main() -> None:
     bot = Bot(settings.api_token, parse_mode="HTML")
 
     if settings.poll_type == PollType.WEBHOOK:
-        from aiohttp_healthcheck import HealthCheck  # type: ignore
-
         health = HealthCheck()
 
         app = web.Application()

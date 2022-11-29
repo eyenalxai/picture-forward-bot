@@ -1,10 +1,9 @@
-import logging
 from typing import Any, Dict, Awaitable, Callable
 
 from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from log import logger
+from util.log import logger
 from util.photo import get_largest_picture
 
 
@@ -18,7 +17,7 @@ async def get_async_database_session(
             async with async_session.begin():
                 data["async_session"] = async_session
                 return await handler(message, data)
-    except Exception as e:
+    except Exception as e:  # pylint: disable=invalid-name, broad-except
         logger.error(f"Error: {e}")
         return None
 
