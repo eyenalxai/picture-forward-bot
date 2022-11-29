@@ -15,13 +15,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v2
+      - name: Check out repository
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v1
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.11
+          python-version: '3.10'
 
       - name: Install Poetry
         uses: snok/install-poetry@v1
@@ -46,3 +47,8 @@ jobs:
         with:
           pylint_command_prefix: poetry run
           pylint: true
+          black_command_prefix: poetry run
+          black: true
+          mypy_command_prefix: poetry run
+          mypy: true
+
