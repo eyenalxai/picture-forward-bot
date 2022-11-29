@@ -45,6 +45,7 @@ jobs:
         uses: wearerequired/lint-action@v2
         with:
           pylint_command_prefix: poetry run
+          pyling_args: $(git ls-files '*.py')
           pylint: true
           black_command_prefix: poetry run
           black: true
