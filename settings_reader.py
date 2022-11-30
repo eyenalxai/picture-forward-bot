@@ -23,7 +23,9 @@ class Settings(BaseSettings):
         return f"https://{self.domain}{self.main_bot_path}"
 
     @validator("domain")
-    def domain_must_not_end_with_slash(self: "Settings", domain: str) -> str:
+    def domain_must_not_end_with_slash(
+        cls: "Settings", domain: str  # noqa: N805
+    ) -> str:
         assert not domain.endswith("/"), "DOMAIN must not end with slash"
         assert not domain.startswith("http"), "DOMAIN must not start with http or https"
         return domain
