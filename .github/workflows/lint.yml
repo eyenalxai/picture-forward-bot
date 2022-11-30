@@ -33,8 +33,8 @@ jobs:
       - name: Run linters
         uses: wearerequired/lint-action@v2
         with:
-          pylint_command_prefix: poetry run
-          pylint: true
+          flake8_command_prefix: poetry run
+          flake8: true
           black_command_prefix: poetry run
           black: true
           mypy_command_prefix: poetry run

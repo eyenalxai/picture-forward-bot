@@ -1,4 +1,4 @@
-from aiogram import Dispatcher, Bot, Router, F as MagicFilter
+from aiogram import Dispatcher, Bot, Router, F
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import SimpleEventIsolation
 from aiogram.types import Message, PhotoSize, User as TelegramUser, Video
@@ -30,8 +30,8 @@ async def start(message: Message, description: str) -> None:
     await message.reply(f"{description}", parse_mode="Markdown")
 
 
-@picture_router.message(Command("save"), MagicFilter.reply_to_message.photo)
-async def handle_picture(  # pylint: disable=too-many-arguments
+@picture_router.message(Command("save"), F.reply_to_message.photo)
+async def handle_picture(  # noqa: CFQ002
     message: Message,
     async_session: AsyncSession,
     reply_to_user: TelegramUser,
@@ -40,8 +40,10 @@ async def handle_picture(  # pylint: disable=too-many-arguments
     picture: PhotoSize,
     channel_name: str,
 ) -> None:
-    if not await is_allowed_user(message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user):
-        return None
+    if not await is_allowed_user(
+        message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user
+    ):
+        return
 
     await handle_content(
         async_session=async_session,
@@ -51,8 +53,8 @@ async def handle_picture(  # pylint: disable=too-many-arguments
     )
 
 
-@video_router.message(Command("save"), MagicFilter.reply_to_message.video)
-async def handle_video(  # pylint: disable=too-many-arguments
+@video_router.message(Command("save"), F.reply_to_message.video)
+async def handle_video(  # noqa: CFQ002
     message: Message,
     async_session: AsyncSession,
     reply_to_user: TelegramUser,
@@ -61,8 +63,10 @@ async def handle_video(  # pylint: disable=too-many-arguments
     video: Video,
     channel_name: str,
 ) -> None:
-    if not await is_allowed_user(message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user):
-        return None
+    if not await is_allowed_user(
+        message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user
+    ):
+        return
 
     await handle_content(
         async_session=async_session,
@@ -87,7 +91,7 @@ async def on_startup(bot: Bot, dispatcher: Dispatcher) -> None:
     if settings.poll_type == PollType.WEBHOOK:
         webhook_url = settings.webhook_url
         await bot.set_webhook(webhook_url)
-        logger.info(f"Webhook set to: {webhook_url}")
+        logger.info("Webhook set to: %s", webhook_url)
 
 
 async def on_shutdown() -> None:
@@ -122,7 +126,9 @@ def main() -> None:
         health = HealthCheck()
 
         app = web.Application()
-        SimpleRequestHandler(dispatcher=dispatcher, bot=bot).register(app, path=settings.main_bot_path)
+        SimpleRequestHandler(dispatcher=dispatcher, bot=bot).register(
+            app, path=settings.main_bot_path
+        )
         setup_application(app, dispatcher, bot=bot)
 
         app.add_routes([web.get("/health", health)])

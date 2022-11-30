@@ -18,14 +18,14 @@ class Settings(BaseSettings):
     main_bot_path: str = "/webhook/main"
 
     @property
-    def webhook_url(self) -> str:
+    def webhook_url(self: "Settings") -> str:
         return f"https://{self.domain}{self.main_bot_path}"
 
     @validator("domain")
-    def domain_must_not_end_with_slash(cls, v: str) -> str:  # pylint: disable=no-self-argument, invalid-name
-        assert not v.endswith("/"), "DOMAIN must not end with slash"
-        assert not v.startswith("http"), "DOMAIN must not start with http or https"
-        return v
+    def domain_must_not_end_with_slash(self: "Settings", domain: str) -> str:
+        assert not domain.endswith("/"), "DOMAIN must not end with slash"
+        assert not domain.startswith("http"), "DOMAIN must not start with http or https"
+        return domain
 
 
 settings = Settings()
