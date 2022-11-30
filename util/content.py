@@ -1,17 +1,15 @@
-from typing import Union, Optional
-
 from aiogram import Bot
 from aiogram.types import Video, PhotoSize, Animation
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from util.query.content import save_content, is_already_saved
+from util.query.content import save_content_to_database
 
 
 def get_file(
-    video: Optional[Video] = None,
-    picture: Optional[PhotoSize] = None,
-    animation: Optional[Animation] = None,
-) -> Union[Video, PhotoSize, Animation]:
+    video: Video | None = None,
+    picture: PhotoSize | None = None,
+    animation: Animation | None = None,
+) -> Video | PhotoSize | Animation:
     if video is not None:
         return video
 
@@ -28,25 +26,21 @@ async def post_content_to_channel(
     async_session: AsyncSession,
     bot: Bot,
     channel_name: str,
-    video: Optional[Video] = None,
-    picture: Optional[PhotoSize] = None,
-    animation: Optional[Animation] = None,
+    sticker_file: Video | PhotoSize | Animation,
 ) -> None:
-    file = get_file(video=video, picture=picture, animation=animation)
 
-    if await is_already_saved(async_session=async_session, file_unique_id=file.file_unique_id):
-        return None
+    await save_content_to_database(
+        async_session=async_session, file_unique_id=sticker_file.file_unique_id
+    )
 
-    await save_content(async_session=async_session, file_unique_id=file.file_unique_id)
+    if isinstance(sticker_file, PhotoSize):
+        await bot.send_photo(chat_id=channel_name, photo=sticker_file.file_id)
+        return
 
-    if isinstance(file, PhotoSize):
-        await bot.send_photo(chat_id=channel_name, photo=file.file_id)
-        return None
+    if isinstance(sticker_file, Video):
+        await bot.send_video(chat_id=channel_name, video=sticker_file.file_id)
+        return
 
-    if isinstance(file, Video):
-        await bot.send_video(chat_id=channel_name, video=file.file_id)
-        return None
-
-    if isinstance(file, Animation):
-        await bot.send_animation(chat_id=channel_name, animation=file.file_id)
-        return None
+    if isinstance(sticker_file, Animation):
+        await bot.send_animation(chat_id=channel_name, animation=sticker_file.file_id)
+        return

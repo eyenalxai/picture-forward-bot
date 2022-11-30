@@ -9,5 +9,5 @@ class Base(DeclarativeBase):
 class Content(Base):
     __tablename__ = "saved_content"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)  # noqa: A003, VNE003
     file_unique_id: Mapped[str] = mapped_column(String(512), unique=True)

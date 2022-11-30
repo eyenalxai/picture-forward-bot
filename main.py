@@ -1,23 +1,24 @@
-from typing import Optional
-
-from aiogram import Dispatcher, Bot, Router, F as MagicFilter
+from aiogram import Dispatcher, Bot, Router, F
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import SimpleEventIsolation
 from aiogram.types import Message, PhotoSize, User as TelegramUser, Video, Animation
 from aiogram.webhook.aiohttp_server import setup_application, SimpleRequestHandler
 from aiohttp import web
+from aiohttp_healthcheck import HealthCheck  # type: ignore
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, AsyncEngine
 
 from models import Base
 from settings_reader import PollType
-from util.content import post_content_to_channel
+from settings_reader import settings
+from util.content import post_content_to_channel, get_file
 from util.log import logger
 from util.middleware import (
+    filter_chat_id,
     filter_non_reply_to_user,
     get_async_database_session,
     filter_non_reply_content,
-    filter_chat_id,
 )
+from util.query.content import is_already_saved
 from util.user import is_allowed_user
 
 start_router = Router(name="oof")
@@ -29,33 +30,41 @@ async def start(message: Message, description: str) -> None:
     await message.reply(f"{description}", parse_mode="Markdown")
 
 
-@content_router.message(Command("save"), MagicFilter.reply_to_message)
-async def save(
+@content_router.message(Command("save"), F.reply_to_message)
+async def handle_content(  # noqa: CFQ002
     message: Message,
     async_session: AsyncSession,
     reply_to_user: TelegramUser,
     sent_by_user: TelegramUser,
     bot: Bot,
     channel_name: str,
-    video: Optional[Video] = None,
-    picture: Optional[PhotoSize] = None,
-    animation: Optional[Animation] = None,
+    video: Video | None = None,
+    picture: PhotoSize | None = None,
+    animation: Animation | None = None,
 ) -> None:
-    if not await is_allowed_user(message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user):
-        return None
+    if not await is_allowed_user(
+        message=message, bot=bot, reply_to_user=reply_to_user, sent_by_user=sent_by_user
+    ):
+        return
+
+    sticker_file: Video | PhotoSize | Animation = get_file(
+        video=video, picture=picture, animation=animation
+    )
+
+    if await is_already_saved(
+        async_session=async_session, file_unique_id=sticker_file.file_unique_id
+    ):
+        return
 
     await post_content_to_channel(
         bot=bot,
-        video=video,
-        picture=picture,
-        animation=animation,
+        sticker_file=sticker_file,
         channel_name=channel_name,
         async_session=async_session,
     )
 
 
 async def on_startup(bot: Bot, dispatcher: Dispatcher) -> None:
-    from settings_reader import settings
 
     async_engine = dispatcher["async_engine"]
 
@@ -71,7 +80,7 @@ async def on_startup(bot: Bot, dispatcher: Dispatcher) -> None:
     if settings.poll_type == PollType.WEBHOOK:
         webhook_url = settings.webhook_url
         await bot.set_webhook(webhook_url)
-        logger.info(f"Webhook set to: {webhook_url}")
+        logger.info("Webhook set to: %s", webhook_url)
 
 
 async def on_shutdown() -> None:
@@ -79,7 +88,6 @@ async def on_shutdown() -> None:
 
 
 def main() -> None:
-    from settings_reader import settings
 
     dispatcher = Dispatcher(events_isolation=SimpleEventIsolation())
 
@@ -92,8 +100,8 @@ def main() -> None:
     dispatcher.message.middleware(filter_chat_id)  # type: ignore
 
     content_router.message.middleware(filter_non_reply_to_user)  # type: ignore
-    content_router.message.middleware(get_async_database_session)  # type: ignore
     content_router.message.middleware(filter_non_reply_content)  # type: ignore
+    content_router.message.middleware(get_async_database_session)  # type: ignore
 
     dispatcher["async_engine"] = create_async_engine(url="sqlite+aiosqlite:///:memory:")
     dispatcher["channel_name"] = settings.channel_name
@@ -103,12 +111,13 @@ def main() -> None:
     bot = Bot(settings.api_token, parse_mode="HTML")
 
     if settings.poll_type == PollType.WEBHOOK:
-        from aiohttp_healthcheck import HealthCheck  # type: ignore
 
         health = HealthCheck()
 
         app = web.Application()
-        SimpleRequestHandler(dispatcher=dispatcher, bot=bot).register(app, path=settings.main_bot_path)
+        SimpleRequestHandler(dispatcher=dispatcher, bot=bot).register(
+            app, path=settings.main_bot_path
+        )
         setup_application(app, dispatcher, bot=bot)
 
         app.add_routes([web.get("/health", health)])
