@@ -17,8 +17,8 @@ COPY ./pyproject.toml /code/pyproject.toml
 RUN poetry install
 
 COPY ./util /code/util
-COPY ./settings_reader.py /code/settings_reader.py
-COPY ./models.py /code/models.py
+COPY app/util/settings.py /code/settings_reader.py
+COPY app/models/models.py /code/models.py
 COPY ./main.py /code/main.py
 
 ENV API_TOKEN ${API_TOKEN}

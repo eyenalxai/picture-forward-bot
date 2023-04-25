@@ -1,0 +1,34 @@
+[flake8]
+ignore = B008 Do not perform function calls in argument defaults
+         D100 Missing docstring in public module
+         D101 Missing docstring in public class
+         D102 Missing docstring in public method
+         D103 Missing docstring in public function
+         D104 Missing docstring in public package
+         D106 Missing docstring in public nested class
+         D107 Missing docstring in __init__
+         N811 constant imported as non constant
+         N805 first argument of a method should be named 'self'
+         Q000 Double quotes found but single quotes preferred
+         S104 Possible binding to all interfaces
+         S311 Standard pseudo-random generators are not suitable for security/cryptographic purposes
+         WPS110 Found wrong variable name
+         WPS115 Found upper-case constant in a class
+         WPS201 Found module with too many imports
+         WPS210 Found too many local variables
+         WPS211 Found too many arguments
+         WPS217 Found too many await expressions
+         WPS303 Found underscored number
+         WPS306 Found class without a base class
+         WPS337 Found multiline conditions
+         WPS348 Found a line that starts with a dot
+         WPS430 Found nested function
+         WPS432 Found magic number
+         W503 line break before binary operator
+max-line-length = 88
+
+# Exclude some directories from flake8
+# __init__.py files are excluded by default
+exclude = .git, .idea, .mypy_cache, .venv
+
+nested-classes-whitelist = Config

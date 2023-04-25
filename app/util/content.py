@@ -1,8 +1,8 @@
 from aiogram import Bot
-from aiogram.types import Video, PhotoSize, Animation
+from aiogram.types import Animation, PhotoSize, Video
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from util.query.content import save_content_to_database
+from app.util.query import save_content_to_database
 
 
 def get_file(
@@ -19,7 +19,7 @@ def get_file(
     if animation is not None:
         return animation
 
-    raise Exception("No file found")
+    raise ValueError("No file found")
 
 
 async def post_content_to_channel(
@@ -28,9 +28,9 @@ async def post_content_to_channel(
     channel_name: str,
     sticker_file: Video | PhotoSize | Animation,
 ) -> None:
-
     await save_content_to_database(
-        async_session=async_session, file_unique_id=sticker_file.file_unique_id
+        async_session=async_session,
+        file_unique_id=sticker_file.file_unique_id,
     )
 
     if isinstance(sticker_file, PhotoSize):
